@@ -62,7 +62,7 @@ void cocktail_fwd(int *arr, int n) {
         swapped = 0;
 
         /*@
-        loop invariant start <= i <= end;
+        loop invariant start <= i < end;
         loop invariant permutation{fwd_begin, Here}(arr, 0, n);
         loop invariant swapped >= 0;
         loop invariant \forall integer j; start <= j < i ==> arr[j] <= arr[j+1];
@@ -92,12 +92,12 @@ void cocktail_fwd(int *arr, int n) {
         //@ ghost bwd_begin: ;
         swapped = 0;
         /*@
-        loop invariant start-1 <= i <= end;
+        loop invariant start-1 <= i < end;
         loop invariant permutation{bwd_begin, Here}(arr, 0, n);
         loop invariant swapped >= 0;
         loop invariant \forall integer j; i < j < end ==> arr[j] <= arr[j+1];
-        // loop invariant sorted(arr, 0, start);
-        loop invariant sorted(arr, end+1, n);
+        loop invariant sorted(arr, 0, start);
+        // loop invariant sorted(arr, end+1, n);
         loop assigns i, swapped, arr[start .. end];
         loop variant i - start + 1;
         */
@@ -113,5 +113,7 @@ void cocktail_fwd(int *arr, int n) {
             }
         }
         ++start;
+
     }
+
 }
