@@ -91,17 +91,14 @@ void cocktail_fwd(int *arr, int n) {
     loop invariant sorted(arr, 0, start);
     loop invariant sorted(arr, end+1, n);
 
-        loop invariant \forall integer i;
-                (start != 0 && 0 <= i <= end) ==> arr[i] <= arr[end + 1];
-
-        loop invariant \forall integer i;
-                (start != 0 && start <= i < n) ==> arr[start - 1] <= arr[i];
-
         loop invariant end + 1 < n ==> \forall integer i; 
                 0 <= i <= end ==> arr[i] <= arr[end + 1];
 
         loop invariant start == 0 || 
             \forall integer j; start <= j < n ==> arr[start-1] <= arr[j];
+
+        loop invariant start == 0 || 
+            \forall integer j; 0 <= j <= end ==> arr[j] <= arr[end+1];
 
         loop invariant \forall integer k; start <= k <= n ==> 
             (start == 0 || arr[start-1] <= arr[k]);
@@ -157,7 +154,7 @@ void cocktail_fwd(int *arr, int n) {
             */
         }
 
-        //@ assert sorted(arr, 0, start);
+        //@ assert (start == 0) || sorted(arr, 0, start);
         //@ assert sorted(arr, end+1, n);
         // assert swapped == 0 ==> sorted(arr, start, end+1);
 
@@ -210,7 +207,7 @@ void cocktail_fwd(int *arr, int n) {
 
         //@ assert \forall integer i; start <= i <= end ==> (start == 0 || arr[start-1] <= arr[i]);
 
-        //@ assert sorted(arr, 0, start);
+        //@ assert (start == 0) || sorted(arr, 0, start);
         //@ assert sorted(arr, end+1, n);
         //@ assert swapped == 0 ==> sorted(arr, start, end+1);
 
