@@ -7,24 +7,9 @@
 // Timeout: 30 sec
 // Mem: 5 GB
 
-/*@ predicate PredMin(int* a, integer start, integer n) =
-        (\forall integer i, j;
-                0 <= i < start <= j <= n ==> a[i] <= a[j]);
-*/
-
-/*@ predicate PredMax(int* a, integer end, integer n) =
-        (\forall integer i, j;
-                0 <= i <= end < j <= n ==> a[i] <= a[j]);
-*/
-
-
 /*@
 predicate sorted{L}(int* a, integer beg, integer end) =
     \forall integer i, j; beg <= i <= j < end ==> a[i] <= a[j];
-
- predicate all_smaller_than_the_last (int* a, integer start_index, integer end_index) =
-   \forall integer k1;
-    start_index <= k1 < end_index ==> a[k1] <= a[end_index];
 
 predicate swap_in_array{L1,L2}(int* a, integer b, integer e, integer i, integer j) =
     b <= i < e && b <= j < e &&
@@ -55,17 +40,17 @@ lemma transitive_permutation{L1, L2, L3}:
 /*@
 lemma sorted_concat:
     \forall int* a, integer x, y, z;
-    0 <= x <= y <= z &&
-    sorted(a, x, y) && sorted(a, y, z) && a[y-1] <= a[y] ==> sorted(a, x, z);
+    (0 <= x <= y <= z &&
+    sorted(a, x, y) && sorted(a, y, z) && a[y-1] <= a[y]) ==> sorted(a, x, z);
 
 lemma sorted_triple_concat:
     \forall int* a, integer b1, b2, b3, b4;
-    0 <= b1 <= b2 <= b3 <= b4 &&
+    (0 <= b1 <= b2 <= b3 <= b4 &&
     sorted(a, b1, b4) &&
     sorted(a, b1, b2) &&
     sorted(a, b3, b4) &&
     a[b2-1] <= a[b2] &&
-    a[b3-1] <= a[b3] ==> sorted(a, b2, b3);
+    a[b3-1] <= a[b3]) ==> sorted(a, b2, b3);
 */
 
 /*@
@@ -91,17 +76,12 @@ void cocktail_fwd(int *arr, int n) {
     loop invariant sorted(arr, 0, start);
     loop invariant sorted(arr, end+1, n);
 
-        loop invariant end + 1 < n ==> \forall integer i; 
-                0 <= i <= end ==> arr[i] <= arr[end + 1];
+    // NOT
+    // loop invariant \forall integer i; end + 1 < n ==> 
+    //      (0 <= i <= end ==> arr[i] <= arr[end+1]);
 
-        loop invariant start == 0 || 
-            \forall integer j; start <= j < n ==> arr[start-1] <= arr[j];
-
-        loop invariant start == 0 || 
-            \forall integer j; 0 <= j <= end ==> arr[j] <= arr[end+1];
-
-        loop invariant \forall integer k; start <= k <= n ==> 
-            (start == 0 || arr[start-1] <= arr[k]);
+    // loop invariant \forall integer i; start > 0 ==> 
+    //         (start < i < n ==> arr[start] <= arr[i]);
 
     loop invariant swapped == 0 ==> sorted(arr, 0, n);
 
@@ -124,14 +104,8 @@ void cocktail_fwd(int *arr, int n) {
         loop invariant 0 <= start <= i <= end <= n-1 || (i == start && start > end);
         loop invariant 0 <= swapped <= i - start;
 
-        loop invariant end + 1 < n ==> \forall integer i; 
-                0 <= i <= end ==> arr[i] <= arr[end + 1];
-
-        loop invariant start == 0 || 
-            \forall integer j; start <= j < n ==> arr[start-1] <= arr[j];
-
-        //loop invariant sorted(arr, 0, start);
-        //loop invariant sorted(arr, end+1, n);
+        loop invariant \forall integer j;
+               (start <= j <= i ==> arr[j] <= arr[i]);
 
         loop invariant permutation{Pre, Here}(arr, 0, n);
 
@@ -154,9 +128,9 @@ void cocktail_fwd(int *arr, int n) {
             */
         }
 
-        //@ assert (start == 0) || sorted(arr, 0, start);
+        //@ assert sorted(arr, 0, start);
         //@ assert sorted(arr, end+1, n);
-        // assert swapped == 0 ==> sorted(arr, start, end+1);
+        //@ assert swapped == 0 ==> sorted(arr, start, end+1);
 
 
         if (!swapped)
@@ -164,8 +138,8 @@ void cocktail_fwd(int *arr, int n) {
             //@ assert swapped == 0 ==> sorted(arr, 0, n);
             //@ assert sorted(arr, 0, start);
             //@ assert sorted(arr, start, end+1);
-            //@ assert sorted(arr, end+1, n);
             //@ assert sorted(arr, 0, n);
+            //@ assert sorted(arr, end+1, n);
             break;
         --end;
 
@@ -177,11 +151,8 @@ void cocktail_fwd(int *arr, int n) {
         loop invariant start-1 <= i <= end-1;
         loop invariant 0 <= swapped <= end - 1 - i;
 
-        loop invariant start == 0 || 
-            \forall integer j; start <= j < n ==> arr[start-1] <= arr[j];
-
-        loop invariant \forall integer k; start <= k <= i ==> 
-            (start == 0 || arr[start-1] <= arr[k]);
+        loop invariant \forall integer j;
+               (i+1 <= j <= end ==> arr[i+1] <= arr[j]);
 
         loop invariant permutation{Pre, Here}(arr, 0, n);
 
@@ -207,7 +178,7 @@ void cocktail_fwd(int *arr, int n) {
 
         //@ assert \forall integer i; start <= i <= end ==> (start == 0 || arr[start-1] <= arr[i]);
 
-        //@ assert (start == 0) || sorted(arr, 0, start);
+        //@ assert sorted(arr, 0, start);
         //@ assert sorted(arr, end+1, n);
         //@ assert swapped == 0 ==> sorted(arr, start, end+1);
 
