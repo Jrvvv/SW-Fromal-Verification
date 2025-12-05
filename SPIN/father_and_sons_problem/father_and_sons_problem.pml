@@ -1,49 +1,47 @@
-bool boat = 1; // Boat is on the left shore
-
-int m_l = 3;
-int c_l = 3;
-
-#define UNSAFE ((m_l && (c_l > m_l)) || ((3-m_l) && ((3-c_l) > (3-m_l))))
-#define SAFE !UNSAFE
-
-inline move_one_kind(x, n) {
-  atomic {
-    x = (boat -> x - n : x + n);
-    boat = !boat;
-  }
-}
-
-inline move_both() {
-  atomic {
-    m_l = (boat -> m_l - 1 : m_l + 1);
-    c_l = (boat -> c_l - 1 : c_l + 1);
-    boat = !boat;
-  }
-}
-
-inline can_move_one(x, n) {
-  (boat -> (x >= n) : ((3-x) >= n)) && (n > 0) && (n <= 2)
-}
-
-inline can_move_both() {
-  (boat -> (m_l >= 1 && c_l >= 1) : ((3-m_l) >= 1 && (3-c_l) >= 1))
-}
-
-inline debug() {
-  printf("Missionaries: %d %d\n", m_l, 3 - m_l);
-  printf("Cannibals: %d %d\n", c_l, 3 - c_l);
-}
+// Положение объектов: 0 = левый берег, 1 = правый берег
+bit boat = 0;
+bit father = 0;
+bit son1 = 0;
+bit son2 = 0;
 
 active proctype main() {
-  do
-  :: can_move_both() -> move_both(); printf("Move both\n"); debug();
-  :: can_move_one(m_l, 1) -> move_one_kind(m_l, 1); printf("Move 1 Missionary\n"); debug();
-  :: can_move_one(m_l, 2) -> move_one_kind(m_l, 2); printf("Move 2 Missionaries\n"); debug();
-  :: can_move_one(c_l, 1) -> move_one_kind(c_l, 1); printf("Move 1 Cannibal\n"); debug();
-  :: can_move_one(c_l, 2) -> move_one_kind(c_l, 2); printf("Move 2 Cannibals\n"); debug();
-  od
+    do
+    :: // Отец плывет один (вес 200 = грузоподъемность)
+       boat == father ->
+           atomic {
+               father = 1 - father;
+               boat = 1 - boat;
+               printf("Отец переплывает один\n");
+           }
+
+    :: // Сын1 плывет один (вес 100) - только если отец на том же берегу
+       boat == son1 ->
+           atomic {
+               son1 = 1 - son1;
+               boat = 1 - boat;
+               printf("Сын1 переплывает один\n");
+           }
+
+    :: // Сын2 плывет один (вес 100) - только если отец на том же берегу
+       boat == son2 ->
+           atomic {
+               son2 = 1 - son2;
+               boat = 1 - boat;
+               printf("Сын2 переплывает один\n");
+           }
+
+    :: // Оба сына плывут (вес 100+100=200 = грузоподъемность)
+       boat == son1 && boat == son2 ->
+           atomic {
+               son1 = 1 - son1;
+               son2 = 1 - son2;
+               boat = 1 - boat;
+               printf("Оба сына переплывают вместе\n");
+           }
+    od
 }
 
-ltl {
-  !(SAFE U (m_l == 0 && c_l == 0))
+// Спецификация LTL: проверяем, что трое НЕ могут оказаться на другом берегу
+ltl goal {
+    !(true U (father == 1 && son1 == 1 && son2 == 1))
 }
